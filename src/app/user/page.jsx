@@ -1,19 +1,23 @@
 'use client'
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
+import { getUserAccount, getAdmin } from "@/lib/connection" 
 
 export default function Page() {
     const [isMounted, setIsMounted] = useState(false);
     const [viewMore, setViewMore] = useState(false)
     const [visibleTasks, setVisibleTasks] = useState([])
     const [tasks, setTasks] = useState([])
-    const [wallet, setWallet] = useState(false) 
+    const [wallet, setWallet] = useState(false)
+    const [userId,setUserId] = useState(null)
+
     const [formData, setFormData] = useState({
         "hours": 1,
         "expertise": 1,
@@ -51,6 +55,26 @@ export default function Page() {
          setVisibleTasks(data["tasks"].slice(0, 4))
         }
      }
+
+     const router = useRouter();
+
+     useEffect(() => {
+        const fetchAccountId = async () => {
+          try {
+            const userAccount = await getUserAccount();
+            setUserId(userAccount);
+            const adminAccount = await getAdmin();
+            console.log(adminAccount);
+            if (userAccount === adminAccount) {
+              router.push('/admin');
+            }
+          } catch (error) {
+            console.error("Error fetching accounts:", error)
+          }
+        }
+        fetchAccountId();
+      }, [router])
+
 
      useEffect(() => {
         setInterval(() => {
@@ -97,7 +121,7 @@ export default function Page() {
                     </Link>
                     <div className="flex items-center w-full gap-4 md:ml-auto md:gap-2 lg:gap-4">
                         <WalletIcon className="h-5 w-5 text-muted-foreground" />
-                        <span className="text-muted-foreground">0x123...456</span>
+                        <span className="text-muted-foreground">{userId}</span>
                     </div>
                 </nav>
             </header>
@@ -162,10 +186,10 @@ export default function Page() {
                         </CardHeader>
                         <CardContent>
                             <div className="text-4xl font-bold">{wallet ? "Valid" : "Invalid"}</div>
-                            <div className="flex items-center gap-2 mt-4">
+                            <div className="flex flex-col items-start gap-2 mt-4">
                                 <div className="flex items-center gap-1">
                                     <LocateIcon className="w-4 h-4" />
-                                    <span className="text-muted-foreground">0x123...</span>
+                                    <span className="text-muted-foreground">{userId}</span>
                                 </div>
                                 <Badge variant={true ? "secondary" : "outline"}>{true ? "Active" : "Inactive"}</Badge>
                             </div>

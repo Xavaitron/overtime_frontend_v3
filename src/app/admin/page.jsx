@@ -2,18 +2,21 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
+import { getUserAccount, getAdmin } from "@/lib/connection" 
 
 export default function Page() {
     const [isMounted, setIsMounted] = useState(false);
     const [viewMore, setViewMore] = useState(false)
     const [visibleTasks, setVisibleTasks] = useState([])
     const [tasks, setTasks] = useState([])
-    const [wallet, setWallet] = useState(false) 
+    const [wallet, setWallet] = useState(false)
+    const [userId, setUserId] = useState(null)
     const [formData, setFormData] = useState({
         "time": null,
         "expertise": null,
@@ -35,43 +38,63 @@ export default function Page() {
 
     const fetchValidityWallet = async () => {
         const response = await fetch("http://localhost:3001/checkWallet", {
-            method: "POST", 
+            method: "POST",
             body: {
-                worker_id: userId 
+                worker_id: userId
             }
         })
         const data = await response.json()
         setWallet(data["status"])
     }
-    
+
     const fetchData = async () => {
         const response = await fetch("http://localhost:3001/checkStatus")
         const data = await response.json()
         setTasks(data["tasks"])
-        if(data["tasks"].length < 4) {
-         setViewMore(true)
-         setVisibleTasks(data["tasks"].slice(0, 4))
+        if (data["tasks"].length < 4) {
+            setViewMore(true)
+            setVisibleTasks(data["tasks"].slice(0, 4))
         }
-     }
+    }
 
-     useEffect(() => {
+
+    const router = useRouter();
+
+    useEffect(() => {
+        const fetchAccountId = async () => {
+            try {
+                const userAccount = await getUserAccount();
+                setUserId(userAccount);
+                const adminAccount = await getAdmin();
+                console.log(adminAccount);
+                if (userAccount === adminAccount) {
+                    router.push('/admin');
+                }
+            } catch (error) {
+                console.error("Error fetching accounts:", error)
+            }
+        }
+        fetchAccountId();
+    }, [router])
+
+    useEffect(() => {
         setInterval(() => {
             fetchData()
             fetchValidityWallet()
-        }, 5000*60)
-     })
+        }, 5000 * 60)
+    })
 
     useEffect(() => {
         setIsMounted(true);
     }, []);
 
-    const handleSubmit = async() => {
+    const handleSubmit = async () => {
         const response = await fetch("http://localhost:3001/addTask", {
             method: "POST",
             body: formData
         })
         const responseStatus = await response.status
-        if(responseStatus == 200) {
+        if (responseStatus == 200) {
             console.log("Worker Added")
         }
     }
@@ -104,58 +127,58 @@ export default function Page() {
                 </nav>
             </header>
             <main className="flex-1 grid gap-8 p-4 md:p-10">
-                    {
-                        visibleTasks.length > 0 ? 
+                {
+                    visibleTasks.length > 0 ?
 
-                        
-                            
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4" >
-                    {
-                        visibleTasks.map((task, index) => 
-                            <Card key={index}>
-                                <CardHeader className="flex flex-row items-center gap-4">
-                                    <TimerIcon className="w-8 h-8" />
-                                    <div className="grid gap-1">
-                                        <CardTitle>Task {task.id}</CardTitle>
-                                        <CardDescription>
-                                        <div className="flex items-center gap-2">
-                                            {
-                                                visibleTasks["worker_id"] ? visibleTasks["worker_id"].map((worker_id, index) => 
-                                                    <div className="flex items-center gap-1" key={index}>
-                                                    <LocateIcon className="w-4 h-4" />
-                                                    <span className="text-muted-foreground">{worker_id}</span>
-                                                </div>
-                                                ) : <div className="flex items-center gap-1" >
-                                                <LocateIcon className="w-4 h-4" />
-                                                <span className="text-muted-foreground">No worker assigned</span>
-                                            </div>
-                                            }
-                                            </div>
-                                        </CardDescription>
-                                    </div>
-                                    <div className="ml-auto">
-                                        <Badge variant={task.status ? "secondary" : "outline"}>{task.status ? "Completed" : "In Progress"}</Badge>
-                                    </div>
-                                </CardHeader>
-                            </Card>
-                        )
-                    }
-                                
-                </div>
 
-                            
-                         : <div className="text-muted-foreground text-3xl text-center">Loading...</div>
-                    }
-                   
+
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4" >
+                            {
+                                visibleTasks.map((task, index) =>
+                                    <Card key={index}>
+                                        <CardHeader className="flex flex-row items-center gap-4">
+                                            <TimerIcon className="w-8 h-8" />
+                                            <div className="grid gap-1">
+                                                <CardTitle>Task {task.id}</CardTitle>
+                                                <CardDescription>
+                                                    <div className="flex items-center gap-2">
+                                                        {
+                                                            visibleTasks["worker_id"] ? visibleTasks["worker_id"].map((worker_id, index) =>
+                                                                <div className="flex items-center gap-1" key={index}>
+                                                                    <LocateIcon className="w-4 h-4" />
+                                                                    <span className="text-muted-foreground">{worker_id}</span>
+                                                                </div>
+                                                            ) : <div className="flex items-center gap-1" >
+                                                                <LocateIcon className="w-4 h-4" />
+                                                                <span className="text-muted-foreground">No worker assigned</span>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </CardDescription>
+                                            </div>
+                                            <div className="ml-auto">
+                                                <Badge variant={task.status ? "secondary" : "outline"}>{task.status ? "Completed" : "In Progress"}</Badge>
+                                            </div>
+                                        </CardHeader>
+                                    </Card>
+                                )
+                            }
+
+                        </div>
+
+
+                        : <div className="text-muted-foreground text-3xl text-center">Loading...</div>
+                }
+
                 {
                     tasks.length > 4 ?
-                    (viewMore ? <div className="flex justify-center">
-                    <Button onClick={viewMoreTasks}>View More</Button>
-                </div> : <div className="flex justify-center">
-                    <Button onClick={viewLessTasks}>View Less</Button>
-                </div>) : <></>
+                        (viewMore ? <div className="flex justify-center">
+                            <Button onClick={viewMoreTasks}>View More</Button>
+                        </div> : <div className="flex justify-center">
+                            <Button onClick={viewLessTasks}>View Less</Button>
+                        </div>) : <></>
                 }
-                
+
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <Card>
                         <CardHeader className="flex flex-row items-center gap-4">
@@ -183,45 +206,45 @@ export default function Page() {
                                 <div className="grid gap-4">
                                     <div className="grid gap-2">
                                         <Label htmlFor="hours">Time</Label>
-                                        <Input type="number" id="hours" value={formData["time"]} onChange={(e) => setFormData((prev) =>   ({
+                                        <Input type="number" id="hours" value={formData["time"]} onChange={(e) => setFormData((prev) => ({
                                             ...prev,
                                             "time": e.target.value
-                                        }))}/>
+                                        }))} />
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="expertise">Expertise</Label>
-                                        <Input type="number" id="expertise" value={formData["expertise"]} onChange={(e) => setFormData((prev) =>   ({
+                                        <Input type="number" id="expertise" value={formData["expertise"]} onChange={(e) => setFormData((prev) => ({
                                             ...prev,
                                             "expertise": e.target.value
-                                        }))}/>
+                                        }))} />
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="min-wage">Dependencies</Label>
-                                        <Input type="number" id="min-dependencies" value={formData["dependencies"].join(",")} onChange={(e) => setFormData((prev) =>   ({
+                                        <Input type="number" id="min-dependencies" value={formData["dependencies"].join(",")} onChange={(e) => setFormData((prev) => ({
                                             ...prev,
                                             "dependencies": e.target.value.split(",")
-                                        }))}/>
+                                        }))} />
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="min-wage">Wage</Label>
-                                        <Input type="number" id="min-wage" value={formData["wage"]} onChange={(e) => setFormData((prev) =>   ({
+                                        <Input type="number" id="min-wage" value={formData["wage"]} onChange={(e) => setFormData((prev) => ({
                                             ...prev,
                                             "wage": e.target.value
-                                        }))}/>
+                                        }))} />
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="wallet">Deadline</Label>
-                                        <Input type="text" id="wallet" value={formData["deadline"]} onChange={(e) => setFormData((prev) =>   ({
+                                        <Input type="text" id="wallet" value={formData["deadline"]} onChange={(e) => setFormData((prev) => ({
                                             ...prev,
                                             "deadline": e.target.value
-                                        }))}/>
+                                        }))} />
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="wallet">Divisible</Label>
-                                        <Input type="text" id="wallet" value={formData["divisible"]} onChange={(e) => setFormData((prev) =>   ({
+                                        <Input type="text" id="wallet" value={formData["divisible"]} onChange={(e) => setFormData((prev) => ({
                                             ...prev,
                                             "divisible": e.target.value
-                                        }))}/>
+                                        }))} />
                                     </div>
                                     <Button type="submit" onClick={handleSubmit}>Add Task</Button>
                                 </div>

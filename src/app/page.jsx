@@ -1,84 +1,68 @@
-'use client'
+"use client"
 
-import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
-import Web3 from "web3";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import Web3 from 'web3';
 
-// Function to get   account
-export const getUserAccount = async () => {
-  if (window.ethereum) {
-    try {
-      const web3 = new Web3(window.ethereum);
-      await window.ethereum.request({ method: "eth_requestAccounts" });
-      const accounts = await web3.eth.getAccounts();
-      return accounts[0];
-    } catch (error) {
-      console.error("Error connecting to MetaMask:", error);
-      return null;
-    }
-  } else {
-    console.warn("MetaMask not detected. Please install MetaMask.");
-    return null;
-  }
-};
+export default function Page() {
+  const [web3, setWeb3] = useState(null);
+  const [accountButtonDisabled, setAccountButtonDisabled] = useState(false);
+  const [accounts, setAccounts] = useState(null);
+  const [connectedAccount, setConnectedAccount] = useState(null);
 
-export default function Home() {
-  const [account, setAccount] = useState(null);
-
-  const handleConnect = async () => {
-    const userAccount = await getUserAccount();
-    if (userAccount) {
-      setAccount(userAccount);
-      console.log("Connected account:", userAccount);
-    } else {
-      console.error("Failed to connect to MetaMask.");
-    }
-  };
+  const router = useRouter();
 
   useEffect(() => {
-    const updateAccount = async () => {
-      const userAccount = await getUserAccount();
-      if (userAccount && userAccount !== account) {
-        setAccount(userAccount);
-        console.log("Account updated:", userAccount);
-      }
-    };
-
     if (window.ethereum) {
-      window.ethereum.on('accountsChanged', updateAccount);
+      setWeb3(new Web3(window.ethereum));
+
+      if (window.ethereum.isMetaMask) {
+        console.log('Connected to Ethereum with MetaMask.');
+      } else {
+        console.log('Non-MetaMask Ethereum provider detected.');
+      }
+    } else {
+      console.log('Please install MetaMask');
+      setAccountButtonDisabled(true);
+    }
+  }, []);
+
+  async function requestAccounts() {
+    if (web3 === null) {
+      return;
     }
 
-    // Cleanup on unmount
-    return () => {
-      if (window.ethereum) {
-        window.ethereum.removeListener('accountsChanged', updateAccount);
-      }
-    };
-  }, [account]);
+    await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+    const allAccounts = await web3.eth.getAccounts();
+    setAccounts(allAccounts);
+    setConnectedAccount(`Account: ${allAccounts[0]}`);
+
+    if (allAccounts && allAccounts.length > 0) {
+      router.push('/user');
+    }
+    console.log(accounts);
+    console.log(connectedAccount);
+  }
 
   return (
-    <div className=" dark flex min-h-[100dvh] flex-col items-center justify-center bg-background">
-      <div className="mx-auto max-w-md text-center">
-        <div className="space-y-4">
-          <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+    <>
+      <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8">
+        <div className="space-y-4 text-center">
+          <h1 className="text-3xl font-bold tracking-tighter text-foreground sm:text-4xl md:text-5xl">
             Connect to Metamask
           </h1>
-          <p className="text-muted-foreground">
-            Connect your Ethereum wallet to access decentralized applications.
+          <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+            Connect your Metamask wallet to access decentralized applications and securely manage your digital assets.
           </p>
           <Button
-            onClick={handleConnect}
-            className="inline-flex h-12 items-center justify-center rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-          >
-            Connect Metamask
-          </Button>
-          {account && (
-            <p className="mt-4 text-foreground">
-              Connected account: {account}
-            </p>
-          )}
+            onClick={requestAccounts}
+            id="requestAccounts"
+            disabled={accountButtonDisabled}
+            size="lg">Connect to Metamask</Button>
         </div>
       </div>
-    </div>
+    </>
   );
 }
