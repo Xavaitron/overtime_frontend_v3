@@ -1,5 +1,3 @@
-'use client'
-
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
@@ -8,7 +6,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import Image from "next/image"
 
-export default function Page() {
+export function admin() {
   return (
     (<div className="dark flex flex-col min-h-screen bg-background">
       <header className="flex items-center h-16 px-4 border-b shrink-0 md:px-6">
