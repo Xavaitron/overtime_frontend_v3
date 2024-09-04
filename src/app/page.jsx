@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import Web3 from "web3";
 
-// Function to get user account
+// Function to get   account
 export const getUserAccount = async () => {
   if (window.ethereum) {
     try {
