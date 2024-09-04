@@ -15,10 +15,12 @@ export default function Page() {
     const [tasks, setTasks] = useState([])
     const [wallet, setWallet] = useState(false) 
     const [formData, setFormData] = useState({
-        "hours": 1,
-        "expertise": 1,
-        "min_wage": 1,
-        "wallet": ""
+        "time": null,
+        "expertise": null,
+        "dependencies": [],
+        "wage": null,
+        "deadline": null,
+        "divisible": false
     })
 
     const viewMoreTasks = () => {
@@ -64,7 +66,7 @@ export default function Page() {
     }, []);
 
     const handleSubmit = async() => {
-        const response = await fetch("http://localhost:3001/addWorker", {
+        const response = await fetch("http://localhost:3001/addTask", {
             method: "POST",
             body: formData
         })
@@ -174,16 +176,16 @@ export default function Page() {
                     <Card>
                         <CardHeader className="flex flex-row items-center gap-4">
                             <UserPlusIcon className="w-8 h-8" />
-                            <CardTitle>Add Worker</CardTitle>
+                            <CardTitle>Add Task</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <form>
                                 <div className="grid gap-4">
                                     <div className="grid gap-2">
-                                        <Label htmlFor="hours">Hours</Label>
-                                        <Input type="number" id="hours" value={formData["hours"]} onChange={(e) => setFormData((prev) =>   ({
+                                        <Label htmlFor="hours">Time</Label>
+                                        <Input type="number" id="hours" value={formData["time"]} onChange={(e) => setFormData((prev) =>   ({
                                             ...prev,
-                                            "hours": e.target.value
+                                            "time": e.target.value
                                         }))}/>
                                     </div>
                                     <div className="grid gap-2">
@@ -194,20 +196,34 @@ export default function Page() {
                                         }))}/>
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="min-wage">Min Wage</Label>
-                                        <Input type="number" id="min-wage" value={formData["min_wage"]} onChange={(e) => setFormData((prev) =>   ({
+                                        <Label htmlFor="min-wage">Dependencies</Label>
+                                        <Input type="number" id="min-dependencies" value={formData["dependencies"].join(",")} onChange={(e) => setFormData((prev) =>   ({
                                             ...prev,
-                                            "min_wage": e.target.value
+                                            "dependencies": e.target.value.split(",")
                                         }))}/>
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="wallet">Wallet</Label>
-                                        <Input type="text" id="wallet" value={formData["wallet"]} onChange={(e) => setFormData((prev) =>   ({
+                                        <Label htmlFor="min-wage">Wage</Label>
+                                        <Input type="number" id="min-wage" value={formData["wage"]} onChange={(e) => setFormData((prev) =>   ({
                                             ...prev,
-                                            "wallet": e.target.value
+                                            "wage": e.target.value
                                         }))}/>
                                     </div>
-                                    <Button type="submit" onClick={handleSubmit}>Add Worker</Button>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="wallet">Deadline</Label>
+                                        <Input type="text" id="wallet" value={formData["deadline"]} onChange={(e) => setFormData((prev) =>   ({
+                                            ...prev,
+                                            "deadline": e.target.value
+                                        }))}/>
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="wallet">Divisible</Label>
+                                        <Input type="text" id="wallet" value={formData["divisible"]} onChange={(e) => setFormData((prev) =>   ({
+                                            ...prev,
+                                            "divisible": e.target.value
+                                        }))}/>
+                                    </div>
+                                    <Button type="submit" onClick={handleSubmit}>Add Task</Button>
                                 </div>
                             </form>
                         </CardContent>
